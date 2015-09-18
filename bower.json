@@ -1,0 +1,16 @@
+{
+  "name": "octotree",
+  "version": "1.6.3",
+  "homepage": "https://github.com/buunguyen/octotree",
+  "authors": [
+    "Mike Staub <mstaub@grubmarket.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
