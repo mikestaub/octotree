@@ -7,10 +7,10 @@ const
       'search', 'developer', 'account'
     ]
   , GH_RESERVED_REPO_NAMES = ['followers', 'following', 'repositories']
-  , GH_BRANCH_ICON_SEL  = '.octicon-git-branch'
+  , GH_BRANCH_SEL  = '[aria-label="Switch branches or tags"]'
   , GH_404_SEL          = '#parallax_wrapper'
   , GH_PJAX_SEL         = '#js-repo-pjax-container'
-  , GH_CONTAINERS       = 'body > .container, .header > .container, .site > .container, .repohead > .container'
+  , GH_CONTAINERS       = '.container'
 
 function GitHub() {
   if (!window.MutationObserver) return
@@ -43,9 +43,19 @@ GitHub.prototype.selectSubmodule = function(path) {
 }
 
 /**
+ * Downloads the file at the given
+ */
+GitHub.prototype.downloadFile = function(path, fileName) {
+  var link = document.createElement('a')
+  link.setAttribute('href', path.replace(/\/blob\//, '/raw/'))
+  link.setAttribute('download', fileName)
+  link.click()
+}
+
+/**
  * Selects a path.
  */
-GitHub.prototype.selectPath = function(path, tabSize) {
+GitHub.prototype.selectFile = function(path, tabSize) {
   var container = $(GH_PJAX_SEL)
     , qs = tabSize ? ('?ts=' + tabSize) : ''
 
@@ -75,7 +85,7 @@ GitHub.prototype.updateLayout = function(sidebarVisible, sidebarWidth) {
   }
 
   // falls-back if GitHub DOM has been updated
-  else $('html').css('margin-left', sidebarVisible ? sidebarWidth - spacing : '')
+  else $('html').css('margin-left', sidebarVisible ? sidebarWidth + spacing : '')
 }
 
 /**
@@ -98,8 +108,8 @@ GitHub.prototype.getRepoFromPath = function(showInNonCodePage, currentRepo) {
 
   // get branch by inspecting page, quite fragile so provide multiple fallbacks
   var branch =
-    $(GH_BRANCH_ICON_SEL).parent('[aria-label="Switch branches or tags"]').data('ref') ||
-    $(GH_BRANCH_ICON_SEL).siblings('.js-select-button').text() ||
+    $(GH_BRANCH_SEL).data('ref') ||
+    $(GH_BRANCH_SEL).children('.js-select-button').text() ||
     (currentRepo.username === match[1] && currentRepo.reponame === match[2] && currentRepo.branch) ||
     'master'
 
@@ -166,7 +176,8 @@ GitHub.prototype.fetchData = function(opts, cb) {
             if (moduleUrl) { // fix #105
               // special handling for submodules hosted in GitHub
               if (~moduleUrl.indexOf('github.com')) {
-                moduleUrl = moduleUrl.replace(/^git:/, window.location.protocol)
+                moduleUrl = moduleUrl.replace(/^git(:\/\/|@)/, window.location.protocol + '//')
+                                     .replace('github.com:', 'github.com/')
                                      .replace(/.git$/, '')
                 item.text = '<a href="' + moduleUrl + '" class="jstree-anchor">' + name + '</a>' +
                             '<span>@ </span>' +
